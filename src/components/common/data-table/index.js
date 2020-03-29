@@ -39,10 +39,12 @@ import {adjustCellsToContainer} from './cell-size';
 
 import {ALL_FIELD_TYPES, SORT_ORDER} from 'constants/default-settings';
 
-const defaultHeaderRowHeight = 55;
-const defaultRowHeight = 32;
-const overscanColumnCount = 10;
-const overscanRowCount = 10;
+const DEFAULT_HEADER_ROW_HEIGHT = 55;
+const DEFAULT_ROW_HEIGHT = 32;
+const OVERSCAN_COLUMN_COUNT = 10;
+const OVERSCAN_ROW_COUNT = 10;
+const DEFAULT_COLUMN_WIDTH = 200;
+
 const fieldToAlignRight = {
   [ALL_FIELD_TYPES.integer]: true,
   [ALL_FIELD_TYPES.real]: true
@@ -233,17 +235,10 @@ export const Container = styled.div`
   }
 `;
 
-const validateCellDataSize = (data, {cellSizeLimit = 10000}) => {
-  if (`${data}`.length <= cellSizeLimit) {
-    return data;
-  }
-  return 'Data too large, download CSV';
-};
-
-const defaultColumnWidth = 200;
-
 const columnWidthFunction = (columns, cellSizeCache, ghost) => ({index}) => {
-  return (columns[index] || {}).ghost ? ghost : cellSizeCache[columns[index]] || defaultColumnWidth;
+  return (columns[index] || {}).ghost
+    ? ghost
+    : cellSizeCache[columns[index]] || DEFAULT_COLUMN_WIDTH;
 };
 
 /*
@@ -344,13 +339,11 @@ const renderHeaderCell = (columns, isPinned, props, toggleMoreOptions, moreOptio
 const renderDataCell = (columns, isPinned, props) => {
   return cellInfo => {
     const {columnIndex, key, style, rowIndex} = cellInfo;
-    const {cellSizeLimit, rows, colMeta} = props;
+    const {rows, colMeta} = props;
     const column = columns[columnIndex];
     const isGhost = column.ghost;
 
-    const rowCell = isGhost
-      ? ''
-      : validateCellDataSize(getRowCell({...props, column, rowIndex}), {cellSizeLimit});
+    const rowCell = isGhost ? '' : getRowCell({...props, column, rowIndex});
     const type = isGhost ? null : colMeta[column];
 
     const endCell = columnIndex === columns.length - 1;
@@ -523,7 +516,7 @@ export class DataTable extends Component {
     );
 
     const hasPinnedColumns = Boolean(pinnedColumns.length);
-    const {headerRowHeight = defaultHeaderRowHeight, rowHeight = defaultRowHeight} = theme;
+    const {headerRowHeight = DEFAULT_HEADER_ROW_HEIGHT, rowHeight = DEFAULT_ROW_HEIGHT} = theme;
 
     const headerGridProps = {
       cellSizeCache,
@@ -535,8 +528,8 @@ export class DataTable extends Component {
 
     const dataGridProps = {
       cellSizeCache,
-      overscanColumnCount,
-      overscanRowCount,
+      overscanColumnCount: OVERSCAN_COLUMN_COUNT,
+      overscanRowCount: OVERSCAN_ROW_COUNT,
       rowCount: (rows || []).length,
       rowHeight
     };
